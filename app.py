@@ -24,6 +24,7 @@ app.config.from_object('config')
 db = SQLAlchemy(app)
 
 # TODO: connect to a local postgresql database
+migrate = Migrate(app, db)
 
 #----------------------------------------------------------------------------#
 # Models.
@@ -42,6 +43,9 @@ class Venue(db.Model):
     facebook_link = db.Column(db.String(120))
 
     # TODO: implement any missing fields, as a database migration using Flask-Migrate
+    # R for Shows DONE
+    show = db.relationship('Show', backref='venue_id', lazy = True)
+
 
 class Artist(db.Model):
     __tablename__ = 'Artist'
@@ -56,8 +60,25 @@ class Artist(db.Model):
     facebook_link = db.Column(db.String(120))
 
     # TODO: implement any missing fields, as a database migration using Flask-Migrate
+    # R for Shows DONE
+    show = db.relationship('Show', backref='artist_id', lazy = True)
 
+    
 # TODO Implement Show and Artist models, and complete all model relationships and properties, as a database migration.
+
+class Show(db.Model):
+    __tablename__ = 'Show'
+  
+    id = db.Column(db.Integer, primary_key=True)
+
+    # FK for Artist DONE
+    # FK for Venue DONE
+    # Add the date column
+    date_time = db.Column(db.DateTime, nullable= False, default=datetime.utcnow)
+    artist_id = db.Column(db.Integer, db.ForeignKey('Artist.id'), nullable=False )
+    venue_id = db.Column(db.Integer, db.ForeignKey('Venue.id'), nullable=False )
+
+
 
 #----------------------------------------------------------------------------#
 # Filters.
