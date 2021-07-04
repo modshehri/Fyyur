@@ -44,7 +44,7 @@ class Venue(db.Model):
 
     # TODO: implement any missing fields, as a database migration using Flask-Migrate
     # R for Shows DONE
-    show = db.relationship('Show', backref='venue_id', lazy = True)
+    show = db.relationship('Show')
 
 
 class Artist(db.Model):
@@ -61,7 +61,7 @@ class Artist(db.Model):
 
     # TODO: implement any missing fields, as a database migration using Flask-Migrate
     # R for Shows DONE
-    show = db.relationship('Show', backref='artist_id', lazy = True)
+    show = db.relationship('Show')
 
     
 # TODO Implement Show and Artist models, and complete all model relationships and properties, as a database migration.
@@ -98,6 +98,7 @@ app.jinja_env.filters['datetime'] = format_datetime
 # Controllers.
 #----------------------------------------------------------------------------#
 
+
 @app.route('/')
 def index():
   return render_template('pages/home.html')
@@ -110,28 +111,30 @@ def index():
 def venues():
   # TODO: replace with real venues data.
   #       num_shows should be aggregated based on number of upcoming shows per venue.
-  data=[{
-    "city": "San Francisco",
-    "state": "CA",
-    "venues": [{
-      "id": 1,
-      "name": "The Musical Hop",
-      "num_upcoming_shows": 0,
-    }, {
-      "id": 3,
-      "name": "Park Square Live Music & Coffee",
-      "num_upcoming_shows": 1,
-    }]
-  }, {
-    "city": "New York",
-    "state": "NY",
-    "venues": [{
-      "id": 2,
-      "name": "The Dueling Pianos Bar",
-      "num_upcoming_shows": 0,
-    }]
-  }]
-  return render_template('pages/venues.html', areas=data);
+  cities = db.session.query(Venue.city).distinct().all()
+  print(cities)
+  data1 = []
+  for c in cities:
+    print(c.city)
+    item = {"city": c.city}
+    venue = Venue.query.filter_by(city = c.city).first()
+    item["state"] = venue.state
+    venues = []
+    all_venues = Venue.query.filter_by(city = c.city).all()
+    shows_counter = 0
+      
+    for v in all_venues:
+      venue = {}
+      venue["id"] = v.id
+      venue["name"] = v.name
+      venue["num_upcoming_shows"] = shows_counter
+      shows_counter += 1
+      venues.append(venue)
+      
+    item["venues"] = venues
+    data1.append(item)
+  print(data1)
+  return render_template('pages/venues.html', areas=data1);
 
 @app.route('/venues/search', methods=['POST'])
 def search_venues():
