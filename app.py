@@ -8,8 +8,9 @@ import babel
 from flask import Flask, render_template, request, Response, flash, redirect, url_for
 from flask_moment import Moment
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import func
 import logging
-from logging import Formatter, FileHandler
+from logging import Formatter, FileHandler, log
 from flask_wtf import Form
 from forms import *
 from flask_migrate import Migrate
@@ -111,9 +112,10 @@ def index():
 def venues():
   # TODO: replace with real venues data.
   #       num_shows should be aggregated based on number of upcoming shows per venue.
+  # DONE
   cities = db.session.query(Venue.city).distinct().all()
   print(cities)
-  data1 = []
+  data = []
   for c in cities:
     print(c.city)
     item = {"city": c.city}
@@ -132,22 +134,38 @@ def venues():
       venues.append(venue)
       
     item["venues"] = venues
-    data1.append(item)
-  print(data1)
-  return render_template('pages/venues.html', areas=data1);
+    data.append(item)
+  
+  return render_template('pages/venues.html', areas=data);
+
+
 
 @app.route('/venues/search', methods=['POST'])
 def search_venues():
+  print()
   # TODO: implement search on artists with partial string search. Ensure it is case-insensitive.
   # seach for Hop should return "The Musical Hop".
   # search for "Music" should return "The Musical Hop" and "Park Square Live Music & Coffee"
+
+  # DONE
+  search_term = request.values['search_term']
+  venues = db.session.query(Venue).filter(func.lower(Venue.name).contains(search_term.lower(), autoescape=True)).all()
+  print(venues)
+  count = 0 
+  data = []
+  
+  for venue in venues:
+    v = {}
+    v["id"] = venue.id
+    v["name"] = venue.name
+    v["num_upcoming_shows"] = count
+    count += 1
+    data.append(v)
+
+
   response={
-    "count": 1,
-    "data": [{
-      "id": 2,
-      "name": "The Dueling Pianos Bar",
-      "num_upcoming_shows": 0,
-    }]
+    "count": count,
+    "data": data
   }
   return render_template('pages/search_venues.html', results=response, search_term=request.form.get('search_term', ''))
 
