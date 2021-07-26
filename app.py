@@ -42,9 +42,13 @@ class Venue(db.Model):
     phone = db.Column(db.String(120))
     image_link = db.Column(db.String(500))
     facebook_link = db.Column(db.String(120))
-
+    genres = db.Column(db.ARRAY(db.String()))
+    website = db.Column(db.String(120))
+    seeking_talent = db.Column(db.Boolean)
+    seeking_description = db.Column(db.String(500))
     # TODO: implement any missing fields, as a database migration using Flask-Migrate
-    # R for Shows DONE
+    # R for Shows 
+    # DONE
     show = db.relationship('Show')
 
 
@@ -56,16 +60,20 @@ class Artist(db.Model):
     city = db.Column(db.String(120))
     state = db.Column(db.String(120))
     phone = db.Column(db.String(120))
-    genres = db.Column(db.String(120))
+    genres = db.Column(db.ARRAY(db.String))
     image_link = db.Column(db.String(500))
     facebook_link = db.Column(db.String(120))
-
+    website = db.Column(db.String(120))
+    seeking_venue = db.Column(db.Boolean)
+    seeking_description = db.Column(db.String(500))
     # TODO: implement any missing fields, as a database migration using Flask-Migrate
-    # R for Shows DONE
+    # R for Shows 
+    # DONE
     show = db.relationship('Show')
 
     
 # TODO Implement Show and Artist models, and complete all model relationships and properties, as a database migration.
+# DONE 
 
 class Show(db.Model):
     __tablename__ = 'Show'
@@ -150,7 +158,7 @@ def search_venues():
   # DONE
   search_term = request.values['search_term']
   venues = db.session.query(Venue).filter(func.lower(Venue.name).contains(search_term.lower(), autoescape=True)).all()
-  print(venues)
+  
   count = 0 
   data = []
   
@@ -167,12 +175,14 @@ def search_venues():
     "count": count,
     "data": data
   }
+
   return render_template('pages/search_venues.html', results=response, search_term=request.form.get('search_term', ''))
 
 @app.route('/venues/<int:venue_id>')
 def show_venue(venue_id):
   # shows the venue page with the given venue_id
   # TODO: replace with real venue data from the venues table, using venue_id
+
   data1={
     "id": 1,
     "name": "The Musical Hop",
