@@ -2,6 +2,7 @@
 # Imports
 #----------------------------------------------------------------------------#
 
+import sys
 import json
 import dateutil.parser
 import babel
@@ -44,8 +45,8 @@ class Venue(db.Model):
     facebook_link = db.Column(db.String(120))
     genres = db.Column(db.ARRAY(db.String()))
     website = db.Column(db.String(120))
-    seeking_talent = db.Column(db.Boolean)
-    seeking_description = db.Column(db.String(500))
+    seeking_talent = db.Column(db.Boolean, default = False)
+    seeking_description = db.Column(db.String(500), default = "")
     # TODO: implement any missing fields, as a database migration using Flask-Migrate
     # R for Shows 
     # DONE
@@ -123,10 +124,8 @@ def venues():
   #       num_shows should be aggregated based on number of upcoming shows per venue.
   # DONE
   cities = db.session.query(Venue.city).distinct().all()
-  print(cities)
   data = []
   for c in cities:
-    print(c.city)
     item = {"city": c.city}
     venue = Venue.query.filter_by(city = c.city).first()
     item["state"] = venue.state
@@ -151,7 +150,6 @@ def venues():
 
 @app.route('/venues/search', methods=['POST'])
 def search_venues():
-  print()
   # TODO: implement search on artists with partial string search. Ensure it is case-insensitive.
   # seach for Hop should return "The Musical Hop".
   # search for "Music" should return "The Musical Hop" and "Park Square Live Music & Coffee"
@@ -206,10 +204,6 @@ def show_venue(venue_id):
   data["past_shows_count"] = 0
   data["upcoming_shows_count"] = 0
 
-
-  print("HI")
-  print(data)
-
   return render_template('pages/show_venue.html', venue=data)
 
 #  Create Venue
@@ -223,10 +217,34 @@ def create_venue_form():
 @app.route('/venues/create', methods=['POST'])
 def create_venue_submission():
   # TODO: insert form data as a new Venue record in the db, instead
+  
+  try:
+    print(request.form)
+    
+    seeking_talent = False
+    if (request.form.keys().__contains__(seeking_talent)):
+      seeking_talent = True
+    
+    seeking_description = ""
+    if (request.form.keys().__contains__(seeking_description)):
+      seeking_description = request.form["seeking_description"]
+
+    genres = []
+    for element in request.form.getlist('genres'):
+      genres.append(element)
+    
+
+    venue = Venue(name=request.form['name'] ,city=request.form['city'] ,state=request.form['state'] ,address=request.form['address'] ,phone=request.form['phone'] ,image_link=request.form['image_link'] ,facebook_link=request.form['facebook_link'] ,genres=genres ,website=request.form['website_link'] ,seeking_talent=seeking_talent ,seeking_description=seeking_description )
+    db.session.add(venue)
+    db.session.commit()
+    flash('Venue ' + request.form['name'] + ' was successfully listed!')
+  except:
+    print(sys.exc_info())
+    flash('An error occurred. Venue ' + request.form['name'] + ' could not be listed.')
   # TODO: modify data to be the data object returned from db insertion
 
   # on successful db insert, flash success
-  flash('Venue ' + request.form['name'] + ' was successfully listed!')
+  
   # TODO: on unsuccessful db insert, flash an error instead.
   # e.g., flash('An error occurred. Venue ' + data.name + ' could not be listed.')
   # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
