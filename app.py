@@ -175,7 +175,6 @@ def show_venue(venue_id):
   data["seeking_talent"] = venue.seeking_talent
   data["seeking_description"] = venue.seeking_description
   
-  # needs to be fixed after setting the shows well
   data["past_shows"] = []
   past_shows = db.session.query(Show).join(Artist).filter(Show.venue_id==venue_id).filter(Show.date_time<datetime.now()).all()
 
@@ -304,17 +303,36 @@ def show_artist(artist_id):
     "facebook_link": artist.facebook_link,
     "seeking_venue": artist.seeking_venue,
     "seeking_description": artist.seeking_description,
-    "image_link": artist.image_link,
-    "past_shows": [{
-      "venue_id": 1,
-      "venue_name": "The Musical Hop",
-      "venue_image_link": "https://images.unsplash.com/photo-1543900694-133f37abaaa5?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=400&q=60",
-      "start_time": "2019-05-21T21:30:00.000Z"
-    }],
-    "upcoming_shows": [],
-    "past_shows_count": 1,
-    "upcoming_shows_count": 0,
+    "image_link": artist.image_link
   }
+
+  data["past_shows"] = []
+  past_shows = db.session.query(Show).join(Venue).filter(Show.artist_id==artist_id).filter(Show.date_time<datetime.now()).all()
+
+  for show in past_shows:
+    item = {
+      "venue_id": show.venue_id,
+      "venue_name": show.venue.name,
+      "venue_image_link": show.venue.image_link,
+      "start_time": str(show.date_time)
+    }
+    data["past_shows"].append(item)
+
+
+  data["upcoming_shows"] = []
+  upcoming_shows = db.session.query(Show).join(Venue).filter(Show.artist_id==artist_id).filter(Show.date_time>datetime.now()).all()
+
+  for show in upcoming_shows:
+    item = {
+      "venue_id": show.venue_id,
+      "venue_name": show.venue.name,
+      "venue_image_link": show.venue.image_link,
+      "start_time": str(show.date_time)
+    }
+    data["upcoming_shows"].append(item)
+  
+  data["past_shows_count"] = len(data["past_shows"])
+  data["upcoming_shows_count"] = len(data["upcoming_shows"])
   return render_template('pages/show_artist.html', artist=data)
 
 #  Update
