@@ -24,8 +24,6 @@ app = Flask(__name__)
 moment = Moment(app)
 app.config.from_object('config')
 db = SQLAlchemy(app)
-
-# TODO: connect to a local postgresql database
 migrate = Migrate(app, db)
 
 #----------------------------------------------------------------------------#
@@ -47,9 +45,6 @@ class Venue(db.Model):
     website = db.Column(db.String(120))
     seeking_talent = db.Column(db.Boolean, default = False)
     seeking_description = db.Column(db.String(500), default = "")
-    # TODO: implement any missing fields, as a database migration using Flask-Migrate
-    # R for Shows 
-    # DONE
     show = db.relationship('Show')
 
 
@@ -68,23 +63,13 @@ class Artist(db.Model):
     website = db.Column(db.String(120))
     seeking_venue = db.Column(db.Boolean)
     seeking_description = db.Column(db.String(500))
-    # TODO: implement any missing fields, as a database migration using Flask-Migrate
-    # R for Shows 
-    # DONE
     show = db.relationship('Show')
 
-    
-# TODO Implement Show and Artist models, and complete all model relationships and properties, as a database migration.
-# DONE 
 
 class Show(db.Model):
     __tablename__ = 'Show'
   
     id = db.Column(db.Integer, primary_key=True)
-
-    # FK for Artist DONE
-    # FK for Venue DONE
-    # Add the date column
     date_time = db.Column(db.DateTime, nullable= False, default=datetime.utcnow)
     artist_id = db.Column(db.Integer, db.ForeignKey('Artist.id'), nullable=False )
     venue_id = db.Column(db.Integer, db.ForeignKey('Venue.id'), nullable=False )
@@ -120,9 +105,6 @@ def index():
 
 @app.route('/venues')
 def venues():
-  # TODO: replace with real venues data.
-  #       num_shows should be aggregated based on number of upcoming shows per venue.
-  # DONE
   cities = db.session.query(Venue.city).distinct().all()
   data = []
   for c in cities:
@@ -150,11 +132,7 @@ def venues():
 
 @app.route('/venues/search', methods=['POST'])
 def search_venues():
-  # TODO: implement search on artists with partial string search. Ensure it is case-insensitive.
-  # seach for Hop should return "The Musical Hop".
-  # search for "Music" should return "The Musical Hop" and "Park Square Live Music & Coffee"
 
-  # DONE
   search_term = request.values['search_term']
   venues = db.session.query(Venue).filter(func.lower(Venue.name).contains(search_term.lower(), autoescape=True)).all()
   
@@ -169,7 +147,6 @@ def search_venues():
     count += 1
     data.append(v)
 
-
   response={
     "count": count,
     "data": data
@@ -179,9 +156,6 @@ def search_venues():
 
 @app.route('/venues/<int:venue_id>')
 def show_venue(venue_id):
-  # shows the venue page with the given venue_id
-  # TODO: replace with real venue data from the venues table, using venue_id
-
   venue = Venue.query.get(venue_id)
   data = {}
 
@@ -215,9 +189,7 @@ def create_venue_form():
   return render_template('forms/new_venue.html', form=form)
 
 @app.route('/venues/create', methods=['POST'])
-def create_venue_submission():
-  # TODO: insert form data as a new Venue record in the db, instead
-  
+def create_venue_submission():  
   try:
     print(request.form)
     
@@ -241,25 +213,13 @@ def create_venue_submission():
   except:
     print(sys.exc_info())
     flash('An error occurred. Venue ' + request.form['name'] + ' could not be listed.')
-  # TODO: modify data to be the data object returned from db insertion
 
-  # on successful db insert, flash success
-  
-  # TODO: on unsuccessful db insert, flash an error instead.
-  # e.g., flash('An error occurred. Venue ' + data.name + ' could not be listed.')
-  # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
   return render_template('pages/home.html')
 
 @app.route('/venues/<venue_id>', methods=['DELETE'])
 def delete_venue(venue_id):
-  # TODO: Complete this endpoint for taking a venue_id, and using
-  # SQLAlchemy ORM to delete a record. Handle cases where the session commit could fail.
-  print("HI")
   Venue.query.filter_by(id=venue_id).delete()
   db.session.commit()
-  
-  # BONUS CHALLENGE: Implement a button to delete a Venue on a Venue Page, have it so that
-  # clicking that button delete it from the db then redirect the user to the homepage
   return redirect('pages/home.html')
 
 
@@ -267,18 +227,15 @@ def delete_venue(venue_id):
 #  ----------------------------------------------------------------
 @app.route('/artists')
 def artists():
-  # TODO: replace with real data returned from querying the database
-  
-  data=[{
-    "id": 4,
-    "name": "Guns N Petals",
-  }, {
-    "id": 5,
-    "name": "Matt Quevedo",
-  }, {
-    "id": 6,
-    "name": "The Wild Sax Band",
-  }]
+  artists = Artist.query.all()
+  data = []
+
+  for a in artists:
+    item = {"id": a.id,
+            "name": a.name
+            }
+    data.append(item)
+
   return render_template('pages/artists.html', artists=data)
 
 @app.route('/artists/search', methods=['POST'])
