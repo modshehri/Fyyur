@@ -262,11 +262,13 @@ def delete_venue(venue_id):
   # clicking that button delete it from the db then redirect the user to the homepage
   return redirect('pages/home.html')
 
+
 #  Artists
 #  ----------------------------------------------------------------
 @app.route('/artists')
 def artists():
   # TODO: replace with real data returned from querying the database
+  
   data=[{
     "id": 4,
     "name": "Guns N Petals",
@@ -436,14 +438,30 @@ def create_artist_form():
 
 @app.route('/artists/create', methods=['POST'])
 def create_artist_submission():
-  # called upon submitting the new artist listing form
-  # TODO: insert form data as a new Venue record in the db, instead
-  # TODO: modify data to be the data object returned from db insertion
+  try:
+    print(request.form)
+    
+    seeking_venue = False
+    if (request.form.keys().__contains__(seeking_venue)):
+      seeking_venue = True
+    
+    seeking_description = ""
+    if (request.form.keys().__contains__(seeking_description)):
+      seeking_description = request.form["seeking_description"]
 
-  # on successful db insert, flash success
-  flash('Artist ' + request.form['name'] + ' was successfully listed!')
-  # TODO: on unsuccessful db insert, flash an error instead.
-  # e.g., flash('An error occurred. Artist ' + data.name + ' could not be listed.')
+    genres = []
+    for element in request.form.getlist('genres'):
+      genres.append(element)
+    
+
+    artist = Artist(name=request.form['name'] ,city=request.form['city'] ,state=request.form['state'] ,phone=request.form['phone'] ,image_link=request.form['image_link'] ,facebook_link=request.form['facebook_link'] ,genres=genres ,website=request.form['website_link'] ,seeking_venue=seeking_venue ,seeking_description=seeking_description )
+    db.session.add(artist)
+    db.session.commit()
+    flash('Artist ' + request.form['name'] + ' was successfully listed!')
+  except:
+    print(sys.exc_info())
+    flash('An error occurred. Artist ' + request.form['name'] + ' could not be listed.')
+
   return render_template('pages/home.html')
 
 
