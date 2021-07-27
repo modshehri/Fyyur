@@ -45,7 +45,7 @@ class Venue(db.Model):
     website = db.Column(db.String(120))
     seeking_talent = db.Column(db.Boolean, default = False)
     seeking_description = db.Column(db.String(500), default = "")
-    show = db.relationship('Show')
+    show = db.relationship('Show', backref="venue")
 
 
 
@@ -63,7 +63,7 @@ class Artist(db.Model):
     website = db.Column(db.String(120))
     seeking_venue = db.Column(db.Boolean)
     seeking_description = db.Column(db.String(500))
-    show = db.relationship('Show')
+    show = db.relationship('Show', backref="artist")
 
 
 class Show(db.Model):
@@ -159,6 +159,9 @@ def show_venue(venue_id):
   venue = Venue.query.get(venue_id)
   data = {}
   
+  print(type(venue.genres))
+  print(venue.genres)
+
   data["id"] = venue.id
   data["name"] = venue.name
   data["city"] = venue.city
@@ -174,9 +177,32 @@ def show_venue(venue_id):
   
   # needs to be fixed after setting the shows well
   data["past_shows"] = []
+  past_shows = db.session.query(Show).join(Artist).filter(Show.venue_id==venue_id).filter(Show.date_time<datetime.now()).all()
+
+  for show in past_shows:
+    item = {
+      "artist_id": show.artist_id,
+      "artist_name": show.artist.name,
+      "artist_image_link": show.artist.image_link,
+      "start_time": str(show.date_time)
+    }
+    data["past_shows"].append(item)
+
+
   data["upcoming_shows"] = []
-  data["past_shows_count"] = 0
-  data["upcoming_shows_count"] = 0
+  upcoming_shows = db.session.query(Show).join(Artist).filter(Show.venue_id==venue_id).filter(Show.date_time>datetime.now()).all()
+
+  for show in upcoming_shows:
+    item = {
+      "artist_id": show.artist_id,
+      "artist_name": show.artist.name,
+      "artist_image_link": show.artist.image_link,
+      "start_time": str(show.date_time)
+    }
+    data["upcoming_shows"].append(item)
+  
+  data["past_shows_count"] = len(data["past_shows"])
+  data["upcoming_shows_count"] = len(data["upcoming_shows"])
 
   return render_template('pages/show_venue.html', venue=data)
 
@@ -264,6 +290,8 @@ def search_artists():
 @app.route('/artists/<int:artist_id>')
 def show_artist(artist_id):
   artist = Artist.query.get(artist_id)
+
+
 
   data={
     "id": artist.id,
@@ -384,9 +412,6 @@ def create_artist_submission():
 
 @app.route('/shows')
 def shows():
-  # displays list of shows at /shows
-  # TODO: replace with real venues data.
-  #       num_shows should be aggregated based on number of upcoming shows per venue.
   shows = Show.query.all()
   data = []
 
