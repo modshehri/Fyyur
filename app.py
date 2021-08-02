@@ -11,11 +11,11 @@ from flask_moment import Moment
 from flask_sqlalchemy import SQLAlchemy
 import logging
 from logging import Formatter, FileHandler, log
-from flask_wtf import FlaskForm as Form
+from flask_wtf import Form
 from forms import *
 from flask_migrate import Migrate
 from sqlalchemy import func
-from Models import db, Venue, Artist, Show
+from models import db, Venue, Artist, Show
 
 
 #----------------------------------------------------------------------------#
@@ -25,8 +25,12 @@ from Models import db, Venue, Artist, Show
 app = Flask(__name__)
 moment = Moment(app)
 app.config.from_object('config')
-db = SQLAlchemy(app)
+db.init_app(app)
 migrate = Migrate(app, db)
+
+#----------------------------------------------------------------------------#
+# Models.
+#----------------------------------------------------------------------------#
 
 
 #----------------------------------------------------------------------------#
